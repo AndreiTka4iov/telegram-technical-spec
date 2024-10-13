@@ -2,12 +2,12 @@ import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { getRecognitionResult } from './dto/getRecognition.dto';
 import { FileService } from 'src/file/file.service';
-import { user } from '@prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class YandexSpeechKitService {
   constructor(private file: FileService) {}
-  async getTextResult(fileId: string, user: user) {
+  async getTextResult(fileId: string, user: User) {
     const apiKey = user.yandex_token;
     const fileUrl = await this.file.getFileUrl(fileId);
     const audioBuffer = await this.file.downloadBuffer(fileUrl);

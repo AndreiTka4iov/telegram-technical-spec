@@ -140,7 +140,6 @@ export class UserService {
   }
 
   async registrationComand(ctx: Context) {
-    await this.prisma.user;
     const userId = ctx.from.id;
     const { session, statusUser } = await this.getUserOrSession(userId);
 
