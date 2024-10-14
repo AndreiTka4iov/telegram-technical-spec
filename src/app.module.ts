@@ -12,6 +12,7 @@ import { ErrorHandlingService } from './error-handling/error-handling.service';
 import { ErrorHandlingModule } from './error-handling/error-handling.module';
 import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
+import { TechnicalSpecModule } from './technical-spec/technical-spec.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { FileModule } from './file/file.module';
     UserModule,
     MessageModule,
     ErrorHandlingModule,
+    TechnicalSpecModule,
   ],
   controllers: [AppController],
   providers: [AppService, ErrorHandlingService],

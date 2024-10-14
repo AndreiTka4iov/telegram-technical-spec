@@ -9,27 +9,47 @@ import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class MessageService {
-  private mp = MessagesPreset;
+  private readonly message = MessagesPreset;
 
   constructor(
     @Inject(forwardRef(() => UserService))
-    private tu: UserService,
+    private user: UserService,
     private speechKit: YandexSpeechKitService,
   ) {}
 
   onFirstStart(ctx: Context) {
     const markup = Markup.inlineKeyboard([Markup.button.callback('Регистрация', 'REGISTER')]);
 
-    return ctx.reply(this.mp.welcome, markup);
+    return ctx.reply(this.message.welcome, markup);
   }
 
   onStartActiveOrBlocked(ctx: Context, status: StatusUser) {
     if (status === 'BLOCKED') return this.onBlocked(ctx);
-    if (status === 'ACTIVE') return ctx.reply(this.mp.alreadyRegistered);
+    if (status === 'ACTIVE') return ctx.reply(this.message.alreadyRegistered);
+  }
+
+  async onRemoveAction(ctx: Context) {
+    try {
+      await this.user.standartCheckUserByTelegramId(ctx.from.id, ctx);
+
+      const markup = Markup.inlineKeyboard([
+        Markup.button.callback('Нет', 'ESC_REMOVE'),
+        Markup.button.callback('Да', 'CONTINUE_REMOVE'),
+      ]);
+
+      return ctx.reply(this.message.removeAccount, markup);
+    } catch (error) {
+      Logger.error(error.message);
+    }
+  }
+
+  async onAcceptRemoveAction(ctx: Context, status: boolean) {
+    if (status) ctx.reply(this.message.acceptRemove);
+    else ctx.reply(this.message.excRemove);
   }
 
   onBlocked(ctx: Context) {
-    return ctx.reply(this.mp.blocked);
+    return ctx.reply(this.message.blocked);
   }
 
   alreadyStartSession(ctx: Context) {
@@ -38,7 +58,7 @@ export class MessageService {
       Markup.button.callback('Продолжить', 'CONTINUE'),
     ]);
 
-    return ctx.reply(this.mp.alreadyExsistedSession, markup);
+    return ctx.reply(this.message.alreadyExsistedSession, markup);
   }
 
   regAgain(ctx: Context) {
@@ -47,11 +67,11 @@ export class MessageService {
       Markup.button.callback('Да', 'REGISTER'),
     ]);
 
-    return ctx.reply(this.mp.regAgain, markup);
+    return ctx.reply(this.message.regAgain, markup);
   }
 
   canceledRegistration(ctx: Context) {
-    return ctx.reply(this.mp.canceledRegistration);
+    return ctx.reply(this.message.canceledRegistration);
   }
 
   questionVoiceMode(ctx: Context) {
@@ -60,11 +80,11 @@ export class MessageService {
       Markup.button.callback('Да', 'ENABLE_VOICE_INPUT'),
     ]);
 
-    return ctx.reply(this.mp.questionVoiceMode, markup);
+    return ctx.reply(this.message.questionVoiceMode, markup);
   }
 
   enableVoiceMode(ctx: Context) {
-    ctx.reply(this.mp.enableVoiceMode);
+    ctx.reply(this.message.enableVoiceMode);
 
     this.manualApiKey(ctx);
 
@@ -72,11 +92,11 @@ export class MessageService {
   }
 
   manualApiKey(ctx: Context) {
-    return ctx.reply(this.mp.manualApiKey);
+    return ctx.reply(this.message.manualApiKey);
   }
 
   enableVoiceModeIsDone(ctx: Context) {
-    return ctx.reply(this.mp.enableVoiceModeIsDone);
+    return ctx.reply(this.message.enableVoiceModeIsDone);
   }
 
   requestEnabledVoiceMode(ctx: Context) {
@@ -85,15 +105,15 @@ export class MessageService {
       Markup.button.callback('Да', 'ENABLE_VOICE_INPUT'),
     ]);
 
-    return ctx.reply(this.mp.enableVoiceModeIsDone, markup);
+    return ctx.reply(this.message.enableVoiceModeIsDone, markup);
   }
 
   disableVoiceMode(ctx: Context) {
-    return ctx.reply(this.mp.disableVoiceMode);
+    return ctx.reply(this.message.disableVoiceMode);
   }
 
   finalRegistration(ctx: Context) {
-    return ctx.reply(this.mp.finalRegistration);
+    return ctx.reply(this.message.finalRegistration);
   }
 
   async onTextEvent(
@@ -106,9 +126,9 @@ export class MessageService {
     >,
   ) {
     try {
-      await this.tu.standartCheckUserByTelegramId(ctx.from.id, ctx);
+      await this.user.standartCheckUserByTelegramId(ctx.from.id, ctx);
 
-      const status = await this.tu.switchByStatus(ctx);
+      const status = await this.user.switchByStatus(ctx);
 
       if (status === 'BLOCKED') return status;
     } catch (error) {
@@ -126,7 +146,7 @@ export class MessageService {
     >,
   ) {
     try {
-      const user = await this.tu.standartCheckUserByTelegramId(ctx.from.id, ctx);
+      const user = await this.user.standartCheckUserByTelegramId(ctx.from.id, ctx);
 
       if (!user.enable_voice) return this.requestEnabledVoiceMode(ctx);
 

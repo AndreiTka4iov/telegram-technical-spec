@@ -32,6 +32,13 @@ export class UserService {
     return this.userSessions.delete(id);
   }
 
+  private async removeUser(id: number) {
+    return await this.prisma.user.update({
+      where: { telegram_id: id },
+      data: { status: 'INACTIVE' },
+    });
+  }
+
   private async getUserOrSession(id: number) {
     const user = await this.findUserByTelegramId(id);
     const session = this.getSession(id);
@@ -148,6 +155,16 @@ export class UserService {
 
     this.setSessionStep(ctx.from.id, 'ENABLE_VOICE');
     return await this.message.questionVoiceMode(ctx);
+  }
+
+  async removeComand(ctx: Context) {
+    return await this.message.onRemoveAction(ctx);
+  }
+
+  async onActionRemove(ctx: Context, status: boolean) {
+    if (status) await this.removeUser(ctx.from.id);
+
+    return await this.message.onAcceptRemoveAction(ctx, status);
   }
 
   async registrationAction(ctx: Context) {
